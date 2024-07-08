@@ -29,6 +29,6 @@ jobs:
     - name: Check install
       run: which ruby; which gem
     - name: Install ffi
-      run: sudo gem install ffi
+      run: gem install --user-install ffi
     - name: Run tests
       run: rake test
