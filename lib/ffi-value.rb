@@ -22,7 +22,15 @@ module FFI
     end
   end
 
-  typedef m, :value
+  if TypeDefs.frozen?
+    t = TypeDefs.dup
+    remove_const(:TypeDefs)
+    const_set(:TypeDefs, t)
+    typedef m, :value
+    TypeDefs.freeze
+  else
+    typedef m, :value
+  end
 
   class AbstractMemory
     if FFI::Type::POINTER.size == 8
