@@ -26,6 +26,8 @@ jobs:
       uses: ruby/setup-ruby@v1
       with:
         ruby-version: ${{ matrix.ruby-version }}
+    - name: Check install
+      run: which ruby; which gem
     - name: Install ffi
       run: sudo gem install ffi
     - name: Run tests
