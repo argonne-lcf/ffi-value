@@ -1,6 +1,9 @@
 require 'ffi'
 
 module FFI
+  ValueStore = Hash.new { |h, k| h[k.object_id] = [k, 0] }
+  ValueStoreMutex = Mutex.new
+
   m = Module.new do
     extend FFI::DataConverter
     if FFI::Type::POINTER.size == 8
@@ -30,6 +33,33 @@ module FFI
     TypeDefs.freeze
   else
     typedef m, :value
+  end
+
+  def self.inc_ref(object)
+    refcount = nil
+    ValueStoreMutex.synchronize {
+      _, refcount = ValueStore[object.object_id]
+      refcount += 1
+      ValueStore[object.object_id] = [object, refcount]
+    }
+    refcount
+  end
+
+  def self.dec_ref(object)
+    refcount = nil
+    ValueStoreMutex.synchronize {
+      _, refcount = ValueStore[object.object_id]
+      refcount -= 1
+      if (refcount <= 0) then
+        ValueStore.delete(object.object_id)
+      else
+        ValueStore[object.object_id] = [object, refcount]
+      end
+    }
+    if refcount < 0
+      raise ArgumentError.new("Object: #{object.object_id} was not previously referenced!")
+    end
+    refcount
   end
 
   class AbstractMemory
