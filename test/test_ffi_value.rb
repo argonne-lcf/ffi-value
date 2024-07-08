@@ -17,15 +17,17 @@ end
 class TestFFIValue < Minitest::Test
 
   def test_value
-    $val = { foo: 1, bar: "baz" }
-    l = lambda { |v| assert_equal(v, $val); nil }
+    success = false
+    val = { foo: 1, bar: "baz" }
+    l = lambda { |v| success = (v == val); nil }
 
     ptid = FFI::MemoryPointer.new(:ulong)
-    res = SmallPthread.pthread_create(ptid, nil, l, $val)
+    res = SmallPthread.pthread_create(ptid, nil, l, val)
     assert_equal(0, res)
     pret = FFI::MemoryPointer.new(:pointer)
     res = SmallPthread.pthread_join(ptid.read_ulong, pret)
     assert_equal(0, res)
+    assert(success)
     assert(pret.read_pointer.null?)
   end
 
